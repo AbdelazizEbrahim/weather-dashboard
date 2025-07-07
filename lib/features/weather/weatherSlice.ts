@@ -1,89 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit"
 
-// Mock weather data for different cities
-const mockWeatherData: Record<string, any> = {
-  london: {
-    coord: { lon: -0.1257, lat: 51.5085 },
-    weather: [{ id: 800, main: "Clear", description: "clear sky", icon: "01d" }],
-    main: {
-      temp: 22,
-      feels_like: 24,
-      temp_min: 18,
-      temp_max: 26,
-      pressure: 1013,
-      humidity: 65,
-    },
-    visibility: 10000,
-    wind: { speed: 3.5, deg: 230 },
-    sys: { country: "GB" },
-    name: "London",
-  },
-  "new york": {
-    coord: { lon: -74.006, lat: 40.7143 },
-    weather: [{ id: 801, main: "Clouds", description: "few clouds", icon: "02d" }],
-    main: {
-      temp: 18,
-      feels_like: 20,
-      temp_min: 15,
-      temp_max: 22,
-      pressure: 1015,
-      humidity: 72,
-    },
-    visibility: 8000,
-    wind: { speed: 4.2, deg: 180 },
-    sys: { country: "US" },
-    name: "New York",
-  },
-  tokyo: {
-    coord: { lon: 139.6917, lat: 35.6895 },
-    weather: [{ id: 500, main: "Rain", description: "light rain", icon: "10d" }],
-    main: {
-      temp: 25,
-      feels_like: 28,
-      temp_min: 22,
-      temp_max: 28,
-      pressure: 1008,
-      humidity: 85,
-    },
-    visibility: 6000,
-    wind: { speed: 2.8, deg: 90 },
-    sys: { country: "JP" },
-    name: "Tokyo",
-  },
-  paris: {
-    coord: { lon: 2.3488, lat: 48.8534 },
-    weather: [{ id: 803, main: "Clouds", description: "broken clouds", icon: "04d" }],
-    main: {
-      temp: 19,
-      feels_like: 21,
-      temp_min: 16,
-      temp_max: 23,
-      pressure: 1012,
-      humidity: 68,
-    },
-    visibility: 9000,
-    wind: { speed: 3.1, deg: 270 },
-    sys: { country: "FR" },
-    name: "Paris",
-  },
-  sydney: {
-    coord: { lon: 151.2073, lat: -33.8678 },
-    weather: [{ id: 800, main: "Clear", description: "clear sky", icon: "01d" }],
-    main: {
-      temp: 24,
-      feels_like: 26,
-      temp_min: 20,
-      temp_max: 28,
-      pressure: 1018,
-      humidity: 60,
-    },
-    visibility: 10000,
-    wind: { speed: 4.5, deg: 120 },
-    sys: { country: "AU" },
-    name: "Sydney",
-  },
-}
-
 interface WeatherData {
   coord: { lon: number; lat: number }
   weather: Array<{
@@ -127,24 +43,27 @@ const initialState: WeatherState = {
   cache: {},
 }
 
-// Mock API call with delay to simulate real API
-export const fetchWeather = createAsyncThunk("weather/fetchWeather", async (city: string, { rejectWithValue }) => {
-  try {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+export const fetchWeather = createAsyncThunk(
+  "weather/fetchWeather",
+  async (city: string, { rejectWithValue }) => {
+    try {
+      const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&units=metric&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}`
+      )
 
-    const cityKey = city.toLowerCase()
-    const weatherData = mockWeatherData[cityKey]
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Failed to fetch weather data")
+      }
 
-    if (!weatherData) {
-      throw new Error(`Weather data not found for "${city}". Try: London, New York, Tokyo, Paris, or Sydney`)
+      const data = await response.json()
+      return { city: city.toLowerCase(), data }
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : "Failed to fetch weather data")
     }
-
-    return { city: cityKey, data: weatherData }
-  } catch (error) {
-    return rejectWithValue(error instanceof Error ? error.message : "Failed to fetch weather data")
   }
-})
+)
+
 
 const weatherSlice = createSlice({
   name: "weather",
