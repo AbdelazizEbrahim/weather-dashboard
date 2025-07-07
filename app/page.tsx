@@ -5,6 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Search, Cloud } from "lucide-react"
+import { RecentCities } from "@/components/RecentCities"
 
 export default function HomePage() {
   const [city, setCity] = useState("")
@@ -52,6 +53,8 @@ export default function HomePage() {
         <div className="mt-8 text-center">
           <p className="text-white/60 text-sm">Try searching for cities like: London, New York, Tokyo, Paris</p>
         </div>
+
+        <RecentCities />
       </div>
     </div>
   )
